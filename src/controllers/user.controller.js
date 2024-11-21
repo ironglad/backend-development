@@ -1,3 +1,4 @@
+  
     import {asyncHandler} from "../utils/asynhandler.js";
     import {ApiError} from "../utils/ApiError.js";
     import {User} from "../models/users.model.js";
@@ -15,11 +16,8 @@
             
             return{accessToken,refresToken}
 
-
-
-
         } catch (error) {
-            throw new ApiError(500,"something went wrong while genrating access and refresh token")
+            throw new ApiError(500, "something went wrong while genrating access and refresh token")
         }
     }
 
@@ -47,6 +45,7 @@
         const existedUser= await User.findOne({
             $or:[{username},{email}]
         })
+
         if(existedUser){
             throw new ApiError(409,"User already existed")
         }
@@ -103,13 +102,13 @@
 
         const {username,email,password}=req.body
 
-        if(!username|| !email){
+        if(!username &&  !email){
             throw new ApiError(400,"username or password is required ")
-        }
-
-       const user= User.findOne(
-            $or=[{username,email}]
-        )
+          }
+        const user = await User.findOne({
+               $or: [{ username }, { email }]
+                });
+        
 
         if(!user){
             throw new ApiError(400,"user does not exist")
@@ -121,7 +120,7 @@
         throw new ApiError(401,"password invalid")
       }
 
-      const{accessToken,refresToken}=generateAccessAndRefreshToken(user._id)
+      const{accessToken,refresToken}=await generateAccessAndRefreshToken(user._id)
 
       const loggedInUser=await User.findOne(user._id).select("-password -refresToken")
     
@@ -133,12 +132,12 @@
       return res
       .status(200)
       .cookie("accessToken",accessToken,options)
-      .cookie("refreshToken",refresToken,options)
+      .cookie("refresToken", refresToken,options)
       .json(
         new ApiResponse(
             200,
             {
-                user,loggedInUser,accessToken,
+                user:loggedInUser,accessToken,
                 refresToken 
             },
             "User Logged In Successfully"
