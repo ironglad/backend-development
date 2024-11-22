@@ -178,13 +178,17 @@
              process.env.REFRESH_TOKEN_SECRET
          )
          
+         if(!incomingRefreshToken){
+            throw new ApiResponse(401,"unthorized request")
+         }
+
          const user = await User.findById(decodedToken?._id)
  
          if(!user){
              throw new ApiResponse(401,"Invalid refresh token")
          }
  
-         if(incomingRefreshToken !== user?.refresToken){
+         if( incomingRefreshToken !== user?.refresToken){
              throw new ApiError(401,"Refresh token is expired or used")
          }
  
